@@ -1,0 +1,15 @@
+<%- include('partials/head', { title: 'Erro' }) %>
+<div class="ui placeholder segment">
+  <div class="ui icon header">
+    <i class="<%= status === 404 ? 'search' : status === 503 ? 'file excel outline' : 'exclamation triangle' %> icon"></i>
+    <%= status %> — <%= message %>
+  </div>
+  <% if (typeof errors !== 'undefined' && errors.length) { %>
+    <div class="ui list"><% errors.forEach(function (e) { %><div class="item"><code><%= e.path %></code>: <%= e.message %></div><% }) %></div>
+  <% } %>
+  <% if (status === 503) { %>
+    <p class="muted">Coloque a planilha .xlsx na pasta configurada (<code>PIPELINE_DIR</code>) ou informe o arquivo em <code>PIPELINE_FILE</code>. Veja o README.</p>
+  <% } %>
+  <a class="ui primary button" href="/">Voltar ao comparativo</a>
+</div>
+<%- include('partials/foot') %>

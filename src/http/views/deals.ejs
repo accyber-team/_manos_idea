@@ -1,0 +1,63 @@
+<%- include('partials/head', { title: 'Oportunidades' }) %>
+<% const f = result.filter; const s = result.summary; %>
+<h1 class="ui header">Oportunidades<div class="sub header"><%= result.deals.length %> linha(s) das abas mensais · valores em US$</div></h1>
+
+<form class="ui small form filter-form" method="get" action="/oportunidades">
+  <div class="fields">
+    <div class="two wide field"><label>Ano</label>
+      <select name="year" class="ui dropdown"><option value="">Todos</option>
+        <% (overview ? overview.years : []).forEach(function (y) { %><option value="<%= y %>" <%= f.year === y ? 'selected' : '' %>><%= y %></option><% }) %>
+      </select></div>
+    <div class="two wide field"><label>Mês</label>
+      <select name="month" class="ui dropdown"><option value="">Todos</option>
+        <% h.months.forEach(function (m) { %><option value="<%= m %>" <%= f.month === m ? 'selected' : '' %>><%= h.monthLabel(m) %></option><% }) %>
+      </select></div>
+    <div class="three wide field"><label>Status</label>
+      <select name="status" class="ui dropdown"><option value="">Todos</option>
+        <% h.statuses.forEach(function (st) { %><option value="<%= st %>" <%= f.status === st ? 'selected' : '' %>><%= h.statusLabel(st) %></option><% }) %>
+      </select></div>
+    <div class="two wide field"><label>Torre</label>
+      <select name="torre" class="ui dropdown"><option value="">Todas</option>
+        <% Object.entries(h.torres).forEach(function ([k, l]) { %><option value="<%= k %>" <%= f.torre === k ? 'selected' : '' %>><%= l %></option><% }) %>
+      </select></div>
+    <div class="three wide field"><label>Parceiro</label>
+      <select name="partner" class="ui search dropdown"><option value="">Todos</option>
+        <% result.options.partners.forEach(function (p) { %><option value="<%= p %>" <%= f.partner === p ? 'selected' : '' %>><%= p %></option><% }) %>
+      </select></div>
+    <div class="three wide field"><label>Responsável</label>
+      <select name="owner" class="ui search dropdown"><option value="">Todos</option>
+        <% result.options.owners.forEach(function (o) { %><option value="<%= o %>" <%= f.owner === o ? 'selected' : '' %>><%= o %></option><% }) %>
+      </select></div>
+  </div>
+  <div class="fields">
+    <div class="six wide field"><label>Busca</label><input type="search" name="q" value="<%= f.q || '' %>" placeholder="Empresa, parceiro ou responsável"></div>
+    <div class="field"><label>&nbsp;</label><button class="ui primary button" type="submit"><i class="filter icon"></i> Filtrar</button> <a class="ui basic button" href="/oportunidades">Limpar</a></div>
+  </div>
+</form>
+
+<div class="summary-strip">
+  <span><strong><%= h.compact(s.totalCents) %></strong> forecast</span>
+  <% h.statuses.forEach(function (st) { %><span><%- include('partials/pct', { summary: s, status: st }) %> <span class="muted"><%= h.compact(s[st].cents) %></span></span><% }) %>
+</div>
+
+<div class="table-scroll">
+<table class="ui compact celled striped unstackable table">
+  <thead><tr><th>Período</th><th>Empresa</th><th>Torre</th><th>Parceiro</th><th>Responsável</th><th>Status</th><th class="right aligned">Valor (US$)</th><th class="right aligned">Original</th></tr></thead>
+  <tbody>
+  <% result.deals.slice(0, 1000).forEach(function (d) { %>
+    <tr>
+      <td class="nowrap"><%= h.monthLabel(d.month) %>/<%= String(d.year).slice(2) %> <span class="muted">(<%= d.sheet %>)</span></td>
+      <td><%= d.company %></td>
+      <td><%= h.torreLabel(d.torre) %></td>
+      <td><%= d.partner %></td>
+      <td><%= d.owner %></td>
+      <td class="nowrap"><span class="status-tag st-<%= d.status %>"><i class="<%= h.statusIcon(d.status) %> icon"></i><%= h.statusShort(d.status) %></span></td>
+      <td class="right aligned nowrap"><%= h.money(d.valueCents) %></td>
+      <td class="right aligned nowrap muted"><%= d.currency === 'USD' ? '' : 'R$ ' + (d.originalCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% if (result.deals.length > 1000) { %><p class="muted">Mostrando 1.000 de <%= result.deals.length %>. Refine os filtros ou use a exportação XLSX.</p><% } %>
+<%- include('partials/foot') %>

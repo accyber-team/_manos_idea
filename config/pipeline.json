@@ -1,0 +1,15 @@
+{
+  "baseYear": 2025,
+  "compareYears": [2025, 2026],
+  "statusColors": {
+    "FF00FF00": "won",
+    "FFFFFF00": "delayed",
+    "FFFF0000": "lost"
+  },
+  "fxRates": { "BRL": 5.8 },
+  "sheetOverrides": {
+    "Até Fev": { "defaultStatus": "won" }
+  },
+  "ignoreSheets": ["Consolidado"],
+  "simulation": { "runs": 5000, "seed": 42 }
+}

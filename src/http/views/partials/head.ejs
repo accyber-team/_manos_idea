@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title + ' · ' : '' %>Análise de Pipeline</title>
+  <link rel="stylesheet" href="/vendor/fomantic/semantic.min.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="ui inverted stackable menu app-menu">
+    <div class="ui container">
+      <a class="header item" href="/"><i class="chart bar icon"></i> Análise de Pipeline</a>
+      <a class="item <%= path === '/' ? 'active' : '' %>" href="/"><i class="exchange icon"></i> Comparativo</a>
+      <a class="item <%= path === '/oportunidades' ? 'active' : '' %>" href="/oportunidades"><i class="list icon"></i> Oportunidades</a>
+      <a class="item <%= path === '/simulacao' ? 'active' : '' %>" href="/simulacao"><i class="random icon"></i> Simulação</a>
+      <a class="item <%= path === '/qualidade' ? 'active' : '' %>" href="/qualidade"><i class="clipboard check icon"></i> Qualidade
+        <% if (overview && (overview.issueCounts.error + overview.issueCounts.warning) > 0) { %>
+          <span class="ui mini orange label" title="Pendências (erros + avisos)"><%= overview.issueCounts.error + overview.issueCounts.warning %></span>
+        <% } %>
+      </a>
+      <div class="right menu">
+        <% if (overview) { %>
+          <div class="item source-info" title="<%= overview.source.path %>">
+            <i class="file excel outline icon"></i>
+            <span><%= overview.source.name %><br><span class="muted-inv">atualizada em <%= h.dateTime(new Date(overview.source.mtimeMs).toISOString()) %></span></span>
+          </div>
+        <% } %>
+        <div class="item">
+          <form method="post" action="/recarregar">
+            <input type="hidden" name="back" value="<%= typeof back !== 'undefined' ? back : path %>">
+            <button class="ui small basic inverted button" type="submit" title="Reler a planilha"><i class="sync icon"></i> Recarregar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ui container app-main">

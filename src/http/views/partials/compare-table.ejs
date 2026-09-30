@@ -1,0 +1,36 @@
+<%# rows: [{label, byYear, delta, beyondLimit?, notes?}], years, firstCol %>
+<div class="table-scroll">
+<table class="ui compact celled unstackable table compare-table">
+  <thead>
+    <tr>
+      <th rowspan="2"><%= firstCol %></th>
+      <th rowspan="2">Ano</th>
+      <th rowspan="2" class="right aligned">Forecast</th>
+      <th rowspan="2" class="right aligned">Vendido</th>
+      <th colspan="4" class="center aligned">% do forecast</th>
+      <th colspan="2" class="center aligned">Variação <%= years[1] %> × <%= years[0] %></th>
+    </tr>
+    <tr>
+      <% h.statuses.forEach(function (s) { %><th class="center aligned"><%= h.statusShort(s) %></th><% }) %>
+      <th class="right aligned">Vendido</th><th class="right aligned">p.p. vendido</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% rows.forEach(function (r) { %>
+    <% years.forEach(function (y, i) { const s = r.byYear[y]; %>
+      <tr class="<%= i === 0 ? 'group-start' : '' %> <%= r.key === 'total' ? 'total-row' : '' %>">
+        <% if (i === 0) { %><td rowspan="2" class="period-cell"><strong><%= r.label %></strong><% if (r.beyondLimit) { %> <span class="muted" title="Inclui meses além do mês-limite">*</span><% } %><% if (r.notes && r.notes.length) { %> <i class="info circle icon muted" title="<%= r.notes.join(' ') %>"></i><% } %></td><% } %>
+        <td class="year-cell y<%= i %>"><span class="year-dot y<%= i %>"></span><%= y %></td>
+        <td class="right aligned nowrap"><%= s ? h.compact(s.totalCents) : '—' %></td>
+        <td class="right aligned nowrap"><strong><%= s ? h.compact(s.won.cents) : '—' %></strong></td>
+        <% h.statuses.forEach(function (st) { %><td class="center aligned"><%- include('pct', { summary: s, status: st }) %></td><% }) %>
+        <% if (i === 0) { %>
+          <td rowspan="2" class="right aligned nowrap delta <%= h.trend(r.delta && r.delta.wonGrowth) %>"><%= r.delta ? h.signedPct(r.delta.wonGrowth) : '—' %></td>
+          <td rowspan="2" class="right aligned nowrap delta <%= h.trend(r.delta && r.delta.pp.won) %>"><%= r.delta ? h.pp(r.delta.pp.won) : '—' %></td>
+        <% } %>
+      </tr>
+    <% }) %>
+  <% }) %>
+  </tbody>
+</table>
+</div>

@@ -1,0 +1,81 @@
+<%- include('partials/head', { title: 'Comparativo' }) %>
+<% const c = comparison; const [ya, yb] = c.years; const t = c.total; const A = t.byYear[ya]; const B = t.byYear[yb];
+   const cur = { granularity: c.granularity, method: c.method, through: c.throughMonth }; %>
+<div class="page-head">
+  <div>
+    <h1 class="ui header">Ciclos de vendas <%= ya %> × <%= yb %>
+      <div class="sub header">Acumulado comparável: Jan–<%= h.monthLabel(c.throughMonth) %> dos dois anos · <%= h.methods[c.method] %> · valores em US$</div>
+    </h1>
+  </div>
+  <a class="ui small button" href="/exportar.xlsx?<%= h.qs(cur) %>"><i class="file excel icon"></i> Exportar XLSX</a>
+</div>
+
+<form class="filter-bar" method="get" action="/">
+  <div class="ui small buttons" role="group" aria-label="Período">
+    <% Object.entries(h.granularities).forEach(function ([k, label]) { %>
+      <a class="ui button <%= c.granularity === k ? 'primary' : 'basic' %>" href="/?<%= h.qs({ ...cur, granularity: k }) %>"><%= label %></a>
+    <% }) %>
+  </div>
+  <input type="hidden" name="granularity" value="<%= c.granularity %>">
+  <label class="inline-field">Método
+    <select class="ui compact dropdown auto-submit" name="method">
+      <% Object.entries(h.methods).forEach(function ([k, label]) { %><option value="<%= k %>" <%= c.method === k ? 'selected' : '' %>><%= label %></option><% }) %>
+    </select>
+  </label>
+  <label class="inline-field">Acumulado até
+    <select class="ui compact dropdown auto-submit" name="through">
+      <% h.months.forEach(function (m) { %><option value="<%= m %>" <%= c.throughMonth === m ? 'selected' : '' %>><%= h.monthLabel(m) %></option><% }) %>
+    </select>
+  </label>
+  <noscript><button class="ui small button" type="submit">Aplicar</button></noscript>
+  <%- include('partials/legend') %>
+</form>
+
+<div class="ui four stackable cards kpis">
+  <div class="card"><div class="content">
+    <div class="kpi-label">Vendido acumulado <%= yb %></div>
+    <div class="kpi-value"><%= B ? h.compact(B.won.cents) : '—' %></div>
+    <div class="kpi-delta delta <%= h.trend(t.delta && t.delta.wonGrowth) %>"><%= t.delta ? h.signedPct(t.delta.wonGrowth) : '—' %> vs <%= A ? h.compact(A.won.cents) : '—' %> em <%= ya %></div>
+  </div></div>
+  <% ['won', 'delayed', 'lost'].forEach(function (s) { %>
+  <div class="card kpi-<%= s %>"><div class="content">
+    <div class="kpi-label"><i class="<%= h.statusIcon(s) %> icon st-icon-<%= s %>"></i>% <%= h.statusLabel(s) %> <%= yb %></div>
+    <div class="kpi-value"><%= B ? h.pct(B[s].pct) : '—' %></div>
+    <div class="kpi-delta delta <%= h.trend(t.delta && t.delta.pp[s], s) %>"><%= t.delta ? h.pp(t.delta.pp[s]) : '—' %> vs <%= A ? h.pct(A[s].pct) : '—' %> em <%= ya %></div>
+  </div></div>
+  <% }) %>
+</div>
+
+<div class="ui two column stackable grid charts-grid">
+  <div class="column"><div class="ui segment chart-card">
+    <h3 class="ui small header">Vendido por período<div class="sub header">US$, <%= ya %> × <%= yb %></div></h3>
+    <div id="chart-won" class="chart" role="img" aria-label="Colunas do valor vendido por período nos dois anos; os valores estão na tabela abaixo"></div>
+  </div></div>
+  <div class="column"><div class="ui segment chart-card">
+    <h3 class="ui small header">Composição do forecast por status<div class="sub header">% do valor em cada período</div></h3>
+    <div id="chart-mix" class="chart" role="img" aria-label="Barras 100% empilhadas por status; os percentuais estão na tabela abaixo"></div>
+  </div></div>
+</div>
+
+<h2 class="ui dividing header">Por período</h2>
+<%- include('partials/compare-table', { rows: [...c.buckets, t], years: c.years, firstCol: h.granularities[c.granularity] }) %>
+<div class="notes muted">
+  <% if (c.buckets.some(function (b) { return b.beyondLimit; })) { %><p>* Período com meses além do mês-limite (Jan–<%= h.monthLabel(c.throughMonth) %>): dados parciais ou ano seguinte ainda sem aba. Fica fora do acumulado comparável.</p><% } %>
+  <% [...new Set(c.buckets.flatMap(function (b) { return b.notes; }))].forEach(function (n) { %><p><i class="info circle icon"></i><%= n %></p><% }) %>
+  <p><strong>Fluxo do período</strong>: vendidos e perdidos de todas as abas do período + DPD/em aberto só da última aba (a oportunidade adiada mês a mês conta uma vez). <strong>Soma das abas</strong>: soma simples dos snapshots mensais.</p>
+</div>
+
+<h2 class="ui dividing header">Quebras do acumulado (Jan–<%= h.monthLabel(c.throughMonth) %>)</h2>
+<div class="ui top attached tabular menu breakdown-tabs">
+  <a class="active item" data-tab="torre">Torre</a>
+  <a class="item" data-tab="partner">Parceiro (top 10)</a>
+  <a class="item" data-tab="owner">Responsável (top 10)</a>
+</div>
+<% [['torre', 'Torre'], ['partner', 'Parceiro'], ['owner', 'Responsável']].forEach(function ([k, label], i) { %>
+<div class="ui bottom attached tab segment <%= i === 0 ? 'active' : '' %>" data-tab="<%= k %>">
+  <%- include('partials/compare-table', { rows: breakdowns[k], years: c.years, firstCol: label }) %>
+</div>
+<% }) %>
+
+<script type="application/json" id="dashboard-data"><%- h.json({ years: c.years, buckets: c.buckets.map(function (b) { return { label: b.label, beyondLimit: b.beyondLimit, byYear: b.byYear }; }) }) %></script>
+<%- include('partials/foot', { charts: true, scripts: ['/static/js/dashboard.js'] }) %>

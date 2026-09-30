@@ -1,0 +1,1 @@
+<% if (summary && summary[status].pct != null) { %><span class="pct-chip st-<%= status %>" title="<%= h.statusLabel(status) %>: <%= h.money(summary[status].cents) %> (<%= summary[status].count %> oport.)"><i class="<%= h.statusIcon(status) %> icon"></i><%= h.pct(summary[status].pct) %></span><% } else { %><span class="muted">—</span><% } %>

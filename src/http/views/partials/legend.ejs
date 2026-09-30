@@ -1,0 +1,5 @@
+<div class="status-legend" aria-label="Legenda de status">
+  <% h.statuses.forEach(function (s) { %>
+    <span class="legend-item"><span class="swatch st-<%= s %>"></span><i class="<%= h.statusIcon(s) %> icon st-icon-<%= s %>"></i><%= h.statusLabel(s) %></span>
+  <% }) %>
+</div>

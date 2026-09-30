@@ -1,0 +1,98 @@
+<%- include('partials/head', { title: 'Simulação' }) %>
+<% const r = sim.result; const [ya, yb] = sim.years; const st = sim.stats;
+   const rate = function (o) { const n = o.won + o.lost + o.pending; return n ? { won: o.won / n, lost: o.lost / n, pending: o.pending / n, n: n } : null; }; %>
+<h1 class="ui header">Projeção de fechamento de <%= yb %> (Monte Carlo)
+  <div class="sub header"><%= r.runs.toLocaleString('pt-BR') %> cenários · meses simulados: <%= sim.stepMonths.map(h.monthLabel).join(', ') %> · valores em US$</div>
+</h1>
+
+<form class="ui small form filter-form" method="get" action="/simulacao">
+  <div class="fields">
+    <div class="three wide field"><label>Meta de vendas <%= yb %> (US$)</label><input type="number" min="1" step="1000" name="target" value="<%= sim.params.target || '' %>" placeholder="<%= Math.round(sim.baselineCents / 100) %>"></div>
+    <div class="three wide field"><label>Histórico das taxas</label>
+      <select name="history" class="ui dropdown">
+        <option value="all" <%= sim.params.history === 'all' ? 'selected' : '' %>><%= ya %> e <%= yb %></option>
+        <% [ya, yb].forEach(function (y) { %><option value="<%= y %>" <%= sim.params.history === String(y) ? 'selected' : '' %>>Só <%= y %></option><% }) %>
+      </select></div>
+    <div class="two wide field"><label>Cenários</label><input type="number" name="runs" min="100" max="50000" step="100" value="<%= sim.params.runs %>"></div>
+    <div class="two wide field"><label>Semente</label><input type="number" name="seed" min="0" value="<%= sim.params.seed %>"></div>
+    <div class="field"><label>&nbsp;</label><button class="ui primary button" type="submit"><i class="random icon"></i> Simular</button></div>
+  </div>
+</form>
+
+<div class="ui four stackable cards kpis">
+  <div class="card"><div class="content">
+    <div class="kpi-label">Realizado <%= yb %> (até <%= sim.latest.label %>)</div>
+    <div class="kpi-value"><%= h.compact(sim.realizedCents) %></div>
+    <div class="kpi-delta muted"><%= h.pct(sim.realizedCents / sim.baselineCents) %> do total de <%= ya %> (<%= h.compact(sim.baselineCents) %>)</div>
+  </div></div>
+  <div class="card"><div class="content">
+    <div class="kpi-label">Projeção mediana (P50)</div>
+    <div class="kpi-value"><%= h.compact(r.p50) %></div>
+    <div class="kpi-delta muted">80% dos cenários entre <%= h.compact(r.p10) %> e <%= h.compact(r.p90) %></div>
+  </div></div>
+  <div class="card"><div class="content">
+    <div class="kpi-label">Chance de superar <%= ya %></div>
+    <div class="kpi-value"><%= h.pct(r.probBeatBaseline, 0) %></div>
+    <div class="kpi-delta muted">total <%= ya %>: <%= h.compact(sim.baselineCents) %></div>
+  </div></div>
+  <div class="card"><div class="content">
+    <div class="kpi-label">Chance de atingir a meta</div>
+    <div class="kpi-value"><%= r.probTarget == null ? '—' : h.pct(r.probTarget, 0) %></div>
+    <div class="kpi-delta muted"><%= r.probTarget == null ? 'informe a meta acima' : 'meta: ' + h.compact(sim.params.target * 100) %></div>
+  </div></div>
+</div>
+
+<div class="ui two column stackable grid charts-grid">
+  <div class="column"><div class="ui segment chart-card">
+    <h3 class="ui small header">Vendido acumulado no ano<div class="sub header"><%= ya %> realizado × <%= yb %> realizado + faixa P10–P90</div></h3>
+    <div id="chart-fan" class="chart" role="img" aria-label="Linhas do vendido acumulado por mês com faixa de projeção"></div>
+  </div></div>
+  <div class="column"><div class="ui segment chart-card">
+    <h3 class="ui small header">Distribuição do total de <%= yb %><div class="sub header">cenários por faixa de valor</div></h3>
+    <div id="chart-hist" class="chart" role="img" aria-label="Histograma dos totais simulados com marcações do total do ano anterior e da meta"></div>
+  </div></div>
+</div>
+
+<div class="ui two column stackable grid">
+  <div class="column">
+    <h3 class="ui dividing header">Premissas estimadas do histórico (<%= st.historyYears.join(' e ') %>)</h3>
+    <table class="ui compact celled unstackable table">
+      <thead><tr><th>Desfecho no mês</th><th class="center aligned">Vendido</th><th class="center aligned">Perdido</th><th class="center aligned">Segue pendente</th><th class="right aligned">Base</th></tr></thead>
+      <tbody>
+      <% [['Oportunidade nova', st.new], ['Carregada do mês anterior', st.carried]].forEach(function ([label, o]) { const x = rate(o); %>
+        <tr><td><%= label %></td>
+          <td class="center aligned"><span class="pct-chip st-won"><i class="check circle icon"></i><%= x ? h.pct(x.won) : '—' %></span></td>
+          <td class="center aligned"><span class="pct-chip st-lost"><i class="times circle icon"></i><%= x ? h.pct(x.lost) : '—' %></span></td>
+          <td class="center aligned"><span class="pct-chip st-delayed"><i class="clock icon"></i><%= x ? h.pct(x.pending) : '—' %></span></td>
+          <td class="right aligned muted"><%= x ? x.n : 0 %> oport.</td></tr>
+      <% }) %>
+      <tr><td>Pendente que some da aba seguinte</td><td colspan="3" class="center aligned"><%= st.dropped.n ? h.pct(st.dropped.dropped / st.dropped.n) : '—' %></td><td class="right aligned muted"><%= st.dropped.n %> oport.</td></tr>
+      </tbody>
+    </table>
+    <div class="muted notes">
+      <p>Cada cenário sorteia as taxas acima com incerteza (posterior Dirichlet), decide cada oportunidade pendente mês a mês e soma novas vendas sorteadas do histórico mensal (<%= st.newWonByMonth.length %> meses; média <%= h.compact(st.newWonByMonth.reduce(function (s, x) { return s + x.cents; }, 0) / Math.max(1, st.newWonByMonth.length)) %>/mês).
+      <% if (sim.current) { %>O mês de <%= sim.latest.label %> está em andamento: suas oportunidades seguem as taxas acima, sem novas vendas extras.<% } %></p>
+      <p>Contribuição média: pipeline atual <%= h.compact(r.meanPipelineCents) %> · novas vendas <%= h.compact(r.meanNewCents) %>.</p>
+    </div>
+  </div>
+  <div class="column">
+    <h3 class="ui dividing header">Pipeline pendente em <%= sim.latest.label %> (<%= sim.pipeline.count %> · <%= h.compact(sim.pipeline.cents) %>)</h3>
+    <div class="table-scroll">
+    <table class="ui compact celled striped unstackable table">
+      <thead><tr><th>Empresa</th><th>Parceiro</th><th>Status</th><th>Origem</th><th class="right aligned">Valor</th></tr></thead>
+      <tbody>
+      <% sim.pipeline.deals.slice().sort(function (a, b) { return b.valueCents - a.valueCents; }).forEach(function (d) { %>
+        <tr><td><%= d.company %></td><td><%= d.partner %></td>
+          <td class="nowrap"><span class="status-tag st-<%= d.status %>"><i class="<%= h.statusIcon(d.status) %> icon"></i><%= h.statusShort(d.status) %></span></td>
+          <td><%= d.carried ? 'carregada' : 'nova' %></td><td class="right aligned nowrap"><%= h.money(d.valueCents) %></td></tr>
+      <% }) %>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="simulation-data"><%- h.json({ years: sim.years, stepMonths: sim.stepMonths, latestMonth: sim.latest.month, current: sim.current,
+  baselineByMonth: sim.baselineByMonth, realizedByMonth: sim.realizedByMonth, fan: r.fan, histogram: r.histogram,
+  baselineCents: sim.baselineCents, targetCents: sim.params.target ? sim.params.target * 100 : null }) %></script>
+<%- include('partials/foot', { charts: true, scripts: ['/static/js/simulation.js'] }) %>

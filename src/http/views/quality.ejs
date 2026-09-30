@@ -1,0 +1,19 @@
+<%- include('partials/head', { title: 'Qualidade dos dados' }) %>
+<% const LEVEL = { error: ['red', 'times circle', 'Erro'], warning: ['orange', 'exclamation triangle', 'Aviso'], info: ['blue', 'info circle', 'Informação'] };
+   const order = { error: 0, warning: 1, info: 2 }; %>
+<h1 class="ui header">Qualidade dos dados<div class="sub header">Conferência automática da planilha a cada leitura. A análise usa sempre as <strong>cores</strong> da célula VALOR.</div></h1>
+<%- include('partials/legend') %>
+<% if (!issues.length) { %>
+  <div class="ui positive message"><i class="check icon"></i> Nenhuma pendência encontrada.</div>
+<% } else { %>
+<table class="ui compact celled table">
+  <thead><tr><th>Nível</th><th>Aba</th><th>Linha</th><th>Descrição</th></tr></thead>
+  <tbody>
+  <% issues.slice().sort(function (a, b) { return order[a.level] - order[b.level]; }).forEach(function (i) { const [color, icon, label] = LEVEL[i.level]; %>
+    <tr><td class="nowrap"><span class="ui <%= color %> basic label"><i class="<%= icon %> icon"></i><%= label %></span></td>
+      <td class="nowrap"><%= i.sheet %></td><td><%= i.row || '' %></td><td><%= i.message %></td></tr>
+  <% }) %>
+  </tbody>
+</table>
+<% } %>
+<%- include('partials/foot') %>
