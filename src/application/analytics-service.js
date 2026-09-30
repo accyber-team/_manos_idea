@@ -1,7 +1,8 @@
-// Casos de uso da análise gerencial. Ports injetados: source (qual arquivo), reader (XLSX → abas cruas),
-// writer (relatório XLSX), clock. A planilha é relida automaticamente quando o arquivo muda (mtime).
+// Casos de uso da análise gerencial. Ports injetados: store (base SQLite ou planilha → deals/snapshots/issues),
+// writer (relatório XLSX), clock. Por compatibilidade, `source` + `reader` (planilha) montam um store XLSX.
+// A fonte é relida automaticamente quando o arquivo muda (mtime) ou no recarregar.
 import { z } from 'zod';
-import { ingest } from '../domain/ingest.js';
+import { createWorkbookStore } from './workbook-store.js';
 import { compareYears, breakdown } from '../domain/comparison.js';
 import { summarize, periodDeals, METHODS } from '../domain/metrics.js';
 import { transitionStats, pendingPipeline } from '../domain/flow.js';
@@ -41,20 +42,21 @@ const simSchema = z.object({
 });
 
 /**
- * @param {{source:{current():{path:string,name:string,mtimeMs:number}, location:string},
- *   reader:{read(path:string):Promise<any[]>}, writer?:{write(report:object):Promise<Buffer>},
+ * @typedef {{kind:string, location:string, describe():{path:string,name:string,mtimeMs:number},
+ *   load():Promise<{deals:object[], snapshots:object[], issues:object[], imported?:object|null}>}} Store
+ * @param {{store?:Store, source?:object, reader?:object, writer?:{write(report:object):Promise<Buffer>},
  *   config:object, clock:{now():Date}}} deps
  */
-export function createAnalyticsService({ source, reader, writer, config, clock }) {
+export function createAnalyticsService({ store, source, reader, writer, config, clock }) {
+  store ??= createWorkbookStore({ source, reader, config });
   const [yearA, yearB] = config.compareYears;
   let cache = null;
 
   async function dataset({ force = false } = {}) {
-    const file = source.current();
+    const file = store.describe();
     if (!force && cache && cache.file.path === file.path && cache.file.mtimeMs === file.mtimeMs) return cache;
-    const raw = await reader.read(file.path);
-    const { deals, snapshots, issues } = ingest(raw, config);
-    cache = { file: { ...file }, loadedAt: clock.now().toISOString(), deals, snapshots, issues };
+    const { deals, snapshots, issues, imported = null } = await store.load();
+    cache = { file: { ...file }, loadedAt: clock.now().toISOString(), deals, snapshots, issues, imported };
     return cache;
   }
 
@@ -81,7 +83,7 @@ export function createAnalyticsService({ source, reader, writer, config, clock }
     const levels = { error: 0, warning: 0, info: 0 };
     for (const i of ds.issues) levels[i.level]++;
     return {
-      source: { ...ds.file, location: source.location }, loadedAt: ds.loadedAt, years: [yearA, yearB],
+      source: { kind: store.kind, ...ds.file, location: store.location, imported: ds.imported }, loadedAt: ds.loadedAt, years: [yearA, yearB],
       snapshots: ds.snapshots.map(snapshotInfo), dealCount: ds.deals.length, issueCounts: levels,
       defaultThrough: defaultThrough(ds.snapshots),
     };

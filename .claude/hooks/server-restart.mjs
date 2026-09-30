@@ -7,7 +7,7 @@ import { openSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { changedSince, parseLstart, isLauncher } from './server-lib.mjs';
 
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 3737);
 const sh = (cmd, args) => { try { return execFileSync(cmd, args, { encoding: 'utf8' }).trim(); } catch { return ''; } };
 const listeningPid = () => sh('lsof', ['-nP', '-t', `-iTCP:${PORT}`, '-sTCP:LISTEN']).split('\n')[0] || null;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -37,7 +37,7 @@ try {
 
   mkdirSync(join(root, '.claude', 'state'), { recursive: true });
   const log = openSync(join(root, '.claude', 'state', 'server.log'), 'a');
-  spawn(process.execPath, ['src/server.js'], { cwd: root, detached: true, stdio: ['ignore', log, log], env: process.env }).unref();
+  spawn(process.execPath, ['--disable-warning=ExperimentalWarning', 'src/server.js'], { cwd: root, detached: true, stdio: ['ignore', log, log], env: process.env }).unref();
 
   const up = await waitFor(() => !!listeningPid(), 10000);
   say(up

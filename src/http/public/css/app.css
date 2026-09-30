@@ -1,0 +1,71 @@
+/* Estilos da aplicação por cima do Fomantic-UI. Cores de status = src/domain/status.js (sempre com ícone + rótulo). */
+:root {
+  --st-won: #0ca30c; --st-delayed: #fab219; --st-lost: #d03b3b; --st-open: #9aa0a6;
+  --st-won-bg: #e8f7e8; --st-delayed-bg: #fff4d6; --st-lost-bg: #fbe5e5; --st-open-bg: #f0f1f3;
+  --year-0: #c26a1b; --year-1: #1f6fd0;
+  --good: #0a7a0a; --bad: #b32d2d; --muted: #6b7280; --border: #e5e7eb; --surface: #ffffff; --ground: #f6f7f9;
+}
+body { background: var(--ground); }
+.app-menu { border-radius: 0 !important; margin-bottom: 1.5rem !important; }
+.app-menu .source-info { line-height: 1.2; font-size: .85em; }
+.muted { color: var(--muted); }
+.muted-inv { color: rgba(255,255,255,.65); }
+.nowrap { white-space: nowrap; }
+.app-main { padding-bottom: 3rem; }
+
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.page-head .ui.header { margin: 0; }
+
+.filter-bar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.filter-bar .inline-field { display: inline-flex; align-items: center; gap: .5rem; font-size: .9em; color: var(--muted); }
+.filter-form { margin-bottom: 1.25rem !important; }
+
+.status-legend { display: inline-flex; gap: 1rem; flex-wrap: wrap; margin-left: auto; font-size: .85em; color: var(--muted); }
+.legend-item { display: inline-flex; align-items: center; gap: .3rem; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.swatch.st-won { background: var(--st-won); } .swatch.st-delayed { background: var(--st-delayed); }
+.swatch.st-lost { background: var(--st-lost); } .swatch.st-open { background: var(--st-open); }
+.st-icon-won { color: var(--st-won); } .st-icon-delayed { color: var(--st-delayed); }
+.st-icon-lost { color: var(--st-lost); } .st-icon-open { color: var(--st-open); }
+
+.kpis { margin-bottom: 1.25rem !important; }
+.kpis .card .content { padding: 1rem 1.1rem !important; }
+.kpi-label { font-size: .8em; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin-bottom: .35rem; }
+.kpi-value { font-size: 1.75em; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi-delta { font-size: .85em; margin-top: .35rem; }
+.kpis .card.kpi-won { border-top: 3px solid var(--st-won) !important; }
+.kpis .card.kpi-delayed { border-top: 3px solid var(--st-delayed) !important; }
+.kpis .card.kpi-lost { border-top: 3px solid var(--st-lost) !important; }
+.delta.good { color: var(--good); } .delta.bad { color: var(--bad); } .delta.neutral { color: var(--muted); }
+
+.charts-grid { margin-bottom: 1rem !important; }
+.chart-card { padding: 1rem !important; }
+.chart-card .ui.header { margin-bottom: .5rem; }
+.chart { width: 100%; height: 320px; }
+
+.pct-chip, .status-tag { display: inline-flex; align-items: center; gap: .25rem; padding: .1rem .45rem; border-radius: 4px; font-size: .9em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pct-chip .icon, .status-tag .icon { margin: 0; font-size: .9em; }
+.st-won.pct-chip, .st-won.status-tag { background: var(--st-won-bg); color: #075e07; }
+.st-delayed.pct-chip, .st-delayed.status-tag { background: var(--st-delayed-bg); color: #7a5200; }
+.st-lost.pct-chip, .st-lost.status-tag { background: var(--st-lost-bg); color: #8a1f1f; }
+.st-open.pct-chip, .st-open.status-tag { background: var(--st-open-bg); color: #4b5563; }
+
+.table-scroll { overflow-x: auto; }
+.compare-table td, .compare-table th { font-variant-numeric: tabular-nums; }
+.compare-table tr.group-start td { border-top: 2px solid var(--border) !important; }
+.compare-table tr.total-row td { background: #fafafa; font-weight: 600; }
+.period-cell { vertical-align: middle !important; }
+.year-cell { white-space: nowrap; color: var(--muted); }
+.year-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: .4rem; }
+.year-dot.y0 { background: var(--year-0); } .year-dot.y1 { background: var(--year-1); }
+
+.summary-strip { display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: center; margin-bottom: .75rem; }
+.notes { font-size: .9em; margin: .75rem 0 1.5rem; }
+.notes p { margin: .25rem 0; }
+.breakdown-tabs { margin-top: .5rem !important; }
+.ui.placeholder.segment { min-height: 14rem; }
+
+@media (max-width: 767px) {
+  .status-legend { margin-left: 0; }
+  .chart { height: 260px; }
+}

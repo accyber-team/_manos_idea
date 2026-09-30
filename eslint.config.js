@@ -6,7 +6,7 @@ export default [
   js.configs.recommended,
   {
     languageOptions: { ecmaVersion: 2023, sourceType: 'module', globals: { ...globals.node } },
-    rules: { 'no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }] },
+    rules: { 'no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }], 'no-irregular-whitespace': ['error', { skipTemplates: true }] },
   },
   { files: ['src/http/public/**/*.js'], languageOptions: { globals: { ...globals.browser, $: 'readonly' } } },
 ];

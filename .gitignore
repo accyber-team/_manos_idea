@@ -5,3 +5,8 @@ reports/
 .claude/settings.local.json
 .DS_Store
 ~$*.xlsx
+
+# Massa de dados: não versionada (gerada por `npm run db:import` a partir da planilha local)
+data/
+*.xlsx
+!test/**/*.xlsx

@@ -21,10 +21,17 @@
       </a>
       <div class="right menu">
         <% if (overview) { %>
+          <% if (overview.source.kind === 'sqlite') { const imp = overview.source.imported; %>
+          <div class="item source-info" title="Base de dados <%= overview.source.path %><%= imp && imp.sourcePath ? ' · importada de ' + imp.sourcePath : '' %>">
+            <i class="database icon"></i>
+            <span><%= overview.source.name %><br><span class="muted-inv"><%= imp ? 'importada em ' + h.dateTime(imp.at) + (imp.sourceName ? ' (' + imp.sourceName + ')' : '') : 'sem importação' %></span></span>
+          </div>
+          <% } else { %>
           <div class="item source-info" title="<%= overview.source.path %>">
             <i class="file excel outline icon"></i>
             <span><%= overview.source.name %><br><span class="muted-inv">atualizada em <%= h.dateTime(new Date(overview.source.mtimeMs).toISOString()) %></span></span>
           </div>
+          <% } %>
         <% } %>
         <div class="item">
           <form method="post" action="/recarregar">

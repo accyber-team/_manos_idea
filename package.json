@@ -5,18 +5,19 @@
   "description": "Análise gerencial comparativa do pipeline de vendas AC CyberPro (2025 × 2026) com simulação Monte Carlo",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "test": "vitest run && node --test .claude/hooks/",
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "test": "vitest run && node --test \".claude/hooks/*.test.mjs\"",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "lint": "eslint .",
     "docs:generate": "node scripts/docs-generate.mjs",
-    "report": "node scripts/report.mjs",
-    "test:e2e": "vitest run --config vitest.e2e.config.js"
+    "report": "node --disable-warning=ExperimentalWarning scripts/report.mjs",
+    "test:e2e": "vitest run --config vitest.e2e.config.js",
+    "db:import": "node --disable-warning=ExperimentalWarning scripts/db-import.mjs"
   },
   "dependencies": {
     "echarts": "^6.1.0",
